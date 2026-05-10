@@ -137,10 +137,39 @@ You will see these lines appear:
 
 Installation is complete. Press **Enter** to close the window.
 
-### Step 5 — Confirm it's connected
+### Step 5 — Verify the agent is running correctly (Windows)
 
-Go to the PrintHub Dashboard → **Agents** page.  
-Within 15–30 seconds, this PC should appear with a green **Online** badge.
+**Method 1 — Check the dashboard (easiest):**
+Open the PrintHub Dashboard → click **Agents** in the left menu.
+This PC should appear with a green **Online** badge within 15–30 seconds.
+
+**Method 2 — Check the log in Command Prompt:**
+
+If the installer window is still open (it shows `C:\Windows\System32>`), run:
+```cmd
+type C:\PrintHubAgent\agent.log
+```
+
+**Method 3 — Check the log in PowerShell:**
+
+Press `Win + X` → click **Terminal** or **PowerShell**, then run:
+```powershell
+Get-Content C:\PrintHubAgent\agent.log -Tail 20
+```
+
+**Method 4 — Open the log in Notepad:**
+```cmd
+notepad C:\PrintHubAgent\agent.log
+```
+
+In the log, look for this line — it confirms the agent is fully connected:
+```
+[WS] Connected to server
+```
+
+**Method 5 — Check Task Manager:**
+Press `Ctrl + Shift + Esc` → **Details** tab → look for `python.exe`.
+If it is there, the agent is running.
 
 ---
 
@@ -166,9 +195,35 @@ The installer will ask for:
 - Whether to use HTTPS
 - An 8-character activation code from the dashboard
 
-### Step 4 — Confirm it's connected
+### Step 4 — Verify the agent is running correctly (Mac)
 
-Dashboard → **Agents** — the Mac should appear as Online within 15 seconds.
+**Method 1 — Check the dashboard (easiest):**
+Open the PrintHub Dashboard → click **Agents** in the left menu.
+This Mac should appear with a green **Online** badge within 15–30 seconds.
+
+**Method 2 — Check the log in Terminal:**
+
+Open Terminal (`Cmd + Space` → Terminal → Enter) and run:
+```bash
+tail -20 ~/Library/Logs/PrintHubAgent/agent.log
+```
+
+Look for this line — it confirms the agent is fully connected:
+```
+[WS] Connected to server
+```
+
+**Method 3 — Watch live log output:**
+```bash
+tail -f ~/Library/Logs/PrintHubAgent/agent.log
+```
+This keeps scrolling in real time. Press `Ctrl + C` to stop.
+
+**Method 4 — Check if the service is registered:**
+```bash
+launchctl list | grep printhub
+```
+If a line appears, the service is loaded and running.
 
 ---
 
@@ -176,13 +231,20 @@ Dashboard → **Agents** — the Mac should appear as Online within 15 seconds.
 
 ### Windows
 
-**View the agent log:**
+The agent starts automatically at every Windows login. You normally never need to touch it.
+
+**View the agent log (Command Prompt):**
+```cmd
+type C:\PrintHubAgent\agent.log
+```
+
+**View the agent log (PowerShell):**
 ```powershell
-Get-Content C:\PrintHubAgent\agent.log -Tail 30
+Get-Content C:\PrintHubAgent\agent.log -Tail 20
 ```
 
 **Start the agent manually:**
-```powershell
+```cmd
 C:\PrintHubAgent\venv\Scripts\python.exe C:\PrintHubAgent\agent.py
 ```
 
@@ -193,21 +255,19 @@ Open Task Manager → Details tab → find `python.exe` → End Task.
 Open Task Scheduler → find `PrintHubAgent` → it runs at every login.
 
 **Reinstall / re-register (if server IP changes):**
-```powershell
-# Delete the config file so the installer asks for the new server IP
-Remove-Item C:\PrintHubAgent\agent_config.json
+```cmd
+del C:\PrintHubAgent\agent_config.json
 ```
 Then run `install_agent.bat` again as Administrator.
 
-**Uninstall completely:**
-```powershell
-# Run PowerShell as Administrator
+**Uninstall completely (run Command Prompt as Administrator):**
+```cmd
 schtasks /delete /tn "PrintHubAgent" /f
-Remove-Item -Recurse -Force C:\PrintHubAgent
+rmdir /s /q C:\PrintHubAgent
 ```
 
 **List printers visible to Windows (diagnostic):**
-```powershell
+```cmd
 C:\PrintHubAgent\venv\Scripts\python.exe C:\PrintHubAgent\debug_wmi.py
 ```
 
@@ -215,10 +275,18 @@ C:\PrintHubAgent\venv\Scripts\python.exe C:\PrintHubAgent\debug_wmi.py
 
 ### Mac
 
-**View live logs:**
+The agent starts automatically at every login via launchd. You normally never need to touch it.
+
+**View the last 20 lines of the log:**
+```bash
+tail -20 ~/Library/Logs/PrintHubAgent/agent.log
+```
+
+**Watch live log output:**
 ```bash
 tail -f ~/Library/Logs/PrintHubAgent/agent.log
 ```
+Press `Ctrl + C` to stop.
 
 **Stop the agent:**
 ```bash
